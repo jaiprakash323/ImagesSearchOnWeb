@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Image Search Web App - Search, View & Favorite Images</title>
+  <meta name="description" content="A powerful image search application featuring real-time search, interactive grid layout, high-res detail view, and custom collection management." />
+  <link rel="stylesheet" href="/src/style.css" />
+</head>
+<body>
+  <div id="app">
+    <!-- TOP HEADER (Matching Wireframe Header) -->
+    <header class="app-header">
+      <div class="header-center">
+        <div class="search-input-wrapper">
+          <span class="search-icon">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+              <circle cx="11" cy="11" r="8"></circle>
+              <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+            </svg>
+          </span>
+          <input 
+            type="text" 
+            id="searchInput" 
+            class="search-input" 
+            placeholder="Search here for image" 
+            autocomplete="off"
+            aria-label="Search here for image"
+          />
+          <button id="searchClearBtn" class="search-clear-btn" aria-label="Clear search">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+              <line x1="18" y1="6" x2="6" y2="18"></line>
+              <line x1="6" y1="6" x2="18" y2="18"></line>
+            </svg>
+          </button>
+        </div>
+      </div>
+
+      <div class="header-controls">
+        <button id="themeToggleBtn" class="theme-toggle-btn" title="Toggle Classic / Modern Dark theme">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path></svg>
+          Theme
+        </button>
+      </div>
+    </header>
+
+    <!-- CATEGORIES QUICK BAR -->
+    <nav class="categories-bar" id="categoriesBar" aria-label="Image Categories">
+      <!-- Category Chips injected dynamically -->
+    </nav>
+
+    <!-- APP BODY (SIDEBAR + MAIN CANVAS) -->
+    <div class="app-body">
+      <!-- LEFT SIDEBAR (Matching Wireframe Pill Buttons) -->
+      <aside class="app-sidebar">
+        <nav id="sidebarNav" style="display: flex; flex-direction: column; gap: 14px; width: 100%;">
+          <!-- Pill Buttons (Logout, Likes, Favourite, and Back) dynamically rendered -->
+        </nav>
+      </aside>
+
+      <!-- MAIN CANVAS (GRID VIEW or SINGLE DETAIL VIEW) -->
+      <main class="main-canvas" id="mainCanvas" role="main">
+        <!-- Content dynamically rendered -->
+      </main>
+    </div>
+  </div>
+
+  <!-- AUTHENTICATION MODAL -->
+  <div class="modal-backdrop" id="authModal" role="dialog" aria-modal="true">
+    <div class="modal-content">
+      <h3 class="modal-title" id="modalTitle">Confirm Action</h3>
+      <p class="modal-subtitle" id="modalSubtitle">Are you sure you want to perform this action?</p>
+      <div style="display: flex; gap: 12px; justify-content: center;">
+        <button class="sidebar-pill-btn" id="modalCloseBtn" style="background: #e2e8f0; color: #334155;">Cancel</button>
+        <button class="sidebar-pill-btn" id="modalAuthActionBtn" style="background: #0088ff; color: #ffffff;">Confirm</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- TOAST NOTIFICATIONS CONTAINER -->
+  <div class="toast-container" id="toastContainer"></div>
+
+  <!-- APPLICATION SCRIPT -->
+  <script type="module" src="/src/app.js"></script>
+</body>
+</html>
