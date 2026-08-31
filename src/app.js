@@ -820,11 +820,12 @@ class ImageApp {
           this.currentView = 'grid';
           this.loadImages();
         } else {
-          errorBanner.textContent = data?.error || data?.message || `Login failed (${res.status}). Ensure MONGODB_URI is configured on Vercel.`;
+          const errorMsg = data?.error || data?.message || `Login failed (HTTP ${res.status}).`;
+          errorBanner.innerHTML = `<div>${errorMsg}</div>`;
           errorBanner.style.display = 'block';
         }
       } catch (err) {
-        errorBanner.textContent = 'Backend connection notice: ' + (err.message || 'Unable to reach server. Use Quick Demo Access.');
+        errorBanner.innerHTML = `<div>Backend connection notice: ${err.message || 'Unable to reach server.'}</div>`;
         errorBanner.style.display = 'block';
       } finally {
         submitBtn.textContent = 'Sign In to Platform';
@@ -924,11 +925,12 @@ class ImageApp {
           this.currentView = 'grid';
           this.loadImages();
         } else {
-          errorBanner.textContent = data?.error || data?.message || `Registration failed (${res.status}). Ensure MONGODB_URI is configured on Vercel.`;
+          const errorMsg = data?.error || data?.message || `Registration failed (HTTP ${res.status}).`;
+          errorBanner.innerHTML = `<div>${errorMsg}</div>`;
           errorBanner.style.display = 'block';
         }
       } catch (err) {
-        errorBanner.textContent = 'Unable to connect to server: ' + (err.message || 'Server error.');
+        errorBanner.innerHTML = `<div>Unable to connect to server: ${err.message || 'Server error.'}</div>`;
         errorBanner.style.display = 'block';
       } finally {
         submitBtn.textContent = 'Register Account & Unlock Downloads';

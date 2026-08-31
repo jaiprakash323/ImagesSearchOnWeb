@@ -12,7 +12,10 @@ export const connectDB = async () => {
 
   if (primaryUri) {
     try {
-      await mongoose.connect(primaryUri, { serverSelectionTimeoutMS: 5000 });
+      await mongoose.connect(primaryUri, {
+        serverSelectionTimeoutMS: 3000,
+        connectTimeoutMS: 3000
+      });
       isConnected = true;
       console.log('✅ Successfully connected to MongoDB Database');
       return true;
@@ -32,7 +35,7 @@ export const connectDB = async () => {
   const localUri = 'mongodb://127.0.0.1:27017/image_app';
   try {
     console.log('🔄 Attempting connection to local MongoDB (mongodb://127.0.0.1:27017/image_app)...');
-    await mongoose.connect(localUri, { serverSelectionTimeoutMS: 3000 });
+    await mongoose.connect(localUri, { serverSelectionTimeoutMS: 2000 });
     isConnected = true;
     console.log('✅ Connected to local MongoDB Database');
     return true;

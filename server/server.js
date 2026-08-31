@@ -19,6 +19,23 @@ app.use((req, res, next) => {
   next();
 });
 
+// Middleware to ensure DB connection before handling API routes
+app.use(async (req, res, next) => {
+  await connectDB();
+
+  if (req.path === '/api/health') {
+    return next();
+  }
+
+  if (mongoose.connection.readyState !== 1) {
+    return res.status(503).json({
+      error: 'Database is not connected. Please verify your MONGODB_URI in .env file.'
+    });
+  }
+
+  next();
+});
+
 // API Routes
 app.use('/api/auth', authRoutes);
 
@@ -40,4 +57,3 @@ const startServer = async () => {
 };
 
 startServer();
-

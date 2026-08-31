@@ -22,8 +22,11 @@ app.use(async (req, res, next) => {
   }
 
   if (mongoose.connection.readyState !== 1) {
+    const hasUri = !!process.env.MONGODB_URI;
     return res.status(503).json({
-      error: 'Database connection failed. Please ensure MONGODB_URI environment variable is configured in Vercel Project Settings.'
+      error: hasUri
+        ? 'MongoDB Atlas connection failed or timed out. Ensure 0.0.0.0/0 (Allow access from anywhere) is enabled in MongoDB Atlas Network Access.'
+        : 'MONGODB_URI environment variable is missing. Please add MONGODB_URI in your Vercel Project Settings.'
     });
   }
 
