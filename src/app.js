@@ -793,9 +793,15 @@ class ImageApp {
           body: JSON.stringify({ email, password })
         });
 
-        const data = await res.json();
+        let data = null;
+        try {
+          data = await res.json();
+        } catch (parseErr) {
+          const rawText = await res.text().catch(() => '');
+          data = { error: rawText || `Server error (${res.status})` };
+        }
 
-        if (res.ok) {
+        if (res.ok && data?.token) {
           this.authToken = data.token;
           this.currentUser = data.user;
           localStorage.setItem('auth_token', data.token);
@@ -814,11 +820,11 @@ class ImageApp {
           this.currentView = 'grid';
           this.loadImages();
         } else {
-          errorBanner.textContent = data.error || 'Invalid credentials. Try demo guest access.';
+          errorBanner.textContent = data?.error || data?.message || `Login failed (${res.status}). Ensure MONGODB_URI is configured on Vercel.`;
           errorBanner.style.display = 'block';
         }
       } catch (err) {
-        errorBanner.textContent = 'Backend server connection notice. Click Quick Demo Guest Access to enter.';
+        errorBanner.textContent = 'Backend connection notice: ' + (err.message || 'Unable to reach server. Use Quick Demo Access.');
         errorBanner.style.display = 'block';
       } finally {
         submitBtn.textContent = 'Sign In to Platform';
@@ -900,9 +906,15 @@ class ImageApp {
           body: JSON.stringify({ username, email, password })
         });
 
-        const data = await res.json();
+        let data = null;
+        try {
+          data = await res.json();
+        } catch (parseErr) {
+          const rawText = await res.text().catch(() => '');
+          data = { error: rawText || `Server error (${res.status})` };
+        }
 
-        if (res.ok) {
+        if (res.ok && data?.token) {
           this.authToken = data.token;
           this.currentUser = data.user;
           localStorage.setItem('auth_token', data.token);
@@ -912,11 +924,11 @@ class ImageApp {
           this.currentView = 'grid';
           this.loadImages();
         } else {
-          errorBanner.textContent = data.error || 'Registration failed.';
+          errorBanner.textContent = data?.error || data?.message || `Registration failed (${res.status}). Ensure MONGODB_URI is configured on Vercel.`;
           errorBanner.style.display = 'block';
         }
       } catch (err) {
-        errorBanner.textContent = 'Unable to connect to server. Try again.';
+        errorBanner.textContent = 'Unable to connect to server: ' + (err.message || 'Server error.');
         errorBanner.style.display = 'block';
       } finally {
         submitBtn.textContent = 'Register Account & Unlock Downloads';

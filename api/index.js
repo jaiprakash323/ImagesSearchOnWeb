@@ -15,6 +15,18 @@ app.use(express.json());
 // Ensure MongoDB database connection per serverless execution
 app.use(async (req, res, next) => {
   await connectDB();
+
+  // Allow health endpoint to respond even if DB is disconnected
+  if (req.path === '/api/health') {
+    return next();
+  }
+
+  if (mongoose.connection.readyState !== 1) {
+    return res.status(503).json({
+      error: 'Database connection failed. Please ensure MONGODB_URI environment variable is configured in Vercel Project Settings.'
+    });
+  }
+
   next();
 });
 
