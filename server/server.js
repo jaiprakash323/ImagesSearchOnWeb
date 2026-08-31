@@ -3,12 +3,12 @@ import mongoose from 'mongoose';
 import cors from 'cors';
 import dotenv from 'dotenv';
 import authRoutes from './routes/authRoutes.js';
+import { connectDB } from './db.js';
 
 dotenv.config();
 
 const app = express();
 const PORT = process.env.PORT || 5000;
-const MONGODB_URI = process.env.MONGODB_URI || 'mongodb://127.0.0.1:27017/image_app';
 
 app.use(cors());
 app.use(express.json());
@@ -31,36 +31,13 @@ app.get('/api/health', (req, res) => {
   });
 });
 
-// Connect to MongoDB & Start Server
+// Connect to MongoDB & Start Local Express Server
 const startServer = async () => {
-  const primaryUri = process.env.MONGODB_URI;
-  const localUri = 'mongodb://127.0.0.1:27017/image_app';
-  let connected = false;
-
-  if (primaryUri) {
-    try {
-      await mongoose.connect(primaryUri, { serverSelectionTimeoutMS: 5000 });
-      console.log('✅ Successfully connected to MongoDB Database');
-      connected = true;
-    } catch (err) {
-      console.warn('⚠️ Primary MongoDB connection failed:', err.message);
-    }
-  }
-
-  if (!connected && primaryUri !== localUri) {
-    try {
-      console.log('🔄 Attempting connection to local MongoDB (mongodb://127.0.0.1:27017/image_app)...');
-      await mongoose.connect(localUri, { serverSelectionTimeoutMS: 5000 });
-      console.log('✅ Connected to local MongoDB Database');
-      connected = true;
-    } catch (localErr) {
-      console.warn('⚠️ Local MongoDB connection also failed:', localErr.message);
-    }
-  }
-
+  await connectDB();
   app.listen(PORT, () => {
     console.log(`🚀 Express Backend Server running on http://localhost:${PORT}`);
   });
 };
 
 startServer();
+
