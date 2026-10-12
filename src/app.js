@@ -9,8 +9,11 @@ class ImageApp {
     this.selectedImageId = null;
     this.searchQuery = '';
     this.selectedCategory = 'All';
-    this.activeFilter = 'all'; // 'all' | 'likes' | 'favourite'
+    this.activeFilter = 'all'; // 'all' | 'all-saved' | 'likes' | 'favourite'
+    this.currentPage = 1;
     this.isLoading = false;
+    this.isLoadingMore = false;
+    this.hasMoreImages = true;
     this.theme = localStorage.getItem('img_theme') || 'modern-dark';
     
     // Auth state: check token & user
@@ -23,16 +26,47 @@ class ImageApp {
     this.likes = new Set(JSON.parse(localStorage.getItem('img_likes') || '[]'));
     this.favourites = new Set(JSON.parse(localStorage.getItem('img_favs') || '[]'));
 
+    // Persistent cache of liked & favorited image objects so they never disappear on query/page changes
+    let savedCache = {};
+    try {
+      savedCache = JSON.parse(localStorage.getItem('img_saved_cache') || '{}');
+    } catch (e) {
+      savedCache = {};
+    }
+    this.savedImagesMap = new Map(Object.entries(savedCache));
+    SAMPLE_IMAGES.forEach(img => {
+      if (this.likes.has(img.id) || this.favourites.has(img.id)) {
+        this.savedImagesMap.set(img.id, img);
+      }
+    });
+
     this.initElements();
     this.initEventListeners();
     this.applyTheme(this.theme);
 
     if (this.authToken) {
       this.fetchUserDataFromMongoDB();
-      this.loadImages();
+      this.loadImages(1, false);
     } else {
       this.render();
     }
+  }
+
+  // Persist cached liked & favorite images to localStorage
+  persistSavedImages() {
+    const obj = {};
+    for (const [id, img] of this.savedImagesMap.entries()) {
+      obj[id] = img;
+    }
+    localStorage.setItem('img_saved_cache', JSON.stringify(obj));
+  }
+
+  // Find image across current images, saved images map, or sample dataset
+  findImageById(id) {
+    return this.images.find(img => img.id === id) || 
+           this.savedImagesMap.get(id) || 
+           SAMPLE_IMAGES.find(img => img.id === id) || 
+           null;
   }
 
   // Check if current user is a fully registered MongoDB account
@@ -68,9 +102,13 @@ class ImageApp {
         this.currentView = 'grid';
       }
 
+      this.activeFilter = 'all';
+      this.currentPage = 1;
+      this.hasMoreImages = true;
+
       clearTimeout(searchDebounceTimeout);
       searchDebounceTimeout = setTimeout(() => {
-        this.loadImages();
+        this.loadImages(1, false);
       }, 400);
     });
 
@@ -79,7 +117,10 @@ class ImageApp {
       this.searchInput.value = '';
       this.searchQuery = '';
       this.searchClearBtn.style.display = 'none';
-      if (this.authToken) this.loadImages();
+      this.activeFilter = 'all';
+      this.currentPage = 1;
+      this.hasMoreImages = true;
+      if (this.authToken) this.loadImages(1, false);
     });
 
     // Theme Toggle
@@ -104,6 +145,24 @@ class ImageApp {
         this.renderMainContent();
       } else if (action === 'register') {
         this.currentView = 'register';
+        this.renderSidebar();
+        this.renderMainContent();
+      } else if (action === 'all') {
+        if (!this.authToken) {
+          this.showToast('Please log in first');
+          return;
+        }
+        this.activeFilter = 'all';
+        this.currentView = 'grid';
+        this.renderSidebar();
+        this.renderMainContent();
+      } else if (action === 'all-saved') {
+        if (!this.authToken) {
+          this.showToast('Please log in to view your Saved images');
+          return;
+        }
+        this.activeFilter = 'all-saved';
+        this.currentView = 'grid';
         this.renderSidebar();
         this.renderMainContent();
       } else if (action === 'likes') {
@@ -133,6 +192,9 @@ class ImageApp {
 
     // Delegated card & action clicks
     this.mainCanvas.addEventListener('click', (e) => {
+      const loadMoreBtn = e.target.closest('#loadMoreBtn');
+      const galleryFilterBtn = e.target.closest('.gallery-filter-btn');
+      const savedSummaryBtn = e.target.closest('.saved-summary-btn');
       const likeBtn = e.target.closest('.card-action-like');
       const favBtn = e.target.closest('.card-action-fav');
       const card = e.target.closest('.image-card');
@@ -147,6 +209,28 @@ class ImageApp {
 
       if (demoAccessBtn) {
         this.executeDemoLogin();
+        return;
+      }
+
+      if (loadMoreBtn) {
+        this.loadMoreImages();
+        return;
+      }
+
+      if (galleryFilterBtn) {
+        const filter = galleryFilterBtn.dataset.filter;
+        if (filter) {
+          this.activeFilter = filter;
+          this.renderSidebar();
+          this.renderMainContent();
+        }
+        return;
+      }
+
+      if (savedSummaryBtn) {
+        this.activeFilter = 'all-saved';
+        this.renderSidebar();
+        this.renderMainContent();
         return;
       }
 
@@ -176,7 +260,10 @@ class ImageApp {
         this.searchQuery = tag;
         this.searchClearBtn.style.display = 'flex';
         this.currentView = 'grid';
-        this.loadImages();
+        this.activeFilter = 'all';
+        this.currentPage = 1;
+        this.hasMoreImages = true;
+        this.loadImages(1, false);
         return;
       }
 
@@ -244,12 +331,18 @@ class ImageApp {
     }
   }
 
-  // UNSPLASH LIVE API FETCHING
-  async loadImages() {
+  // UNSPLASH LIVE API FETCHING WITH PAGINATION & LOAD MORE
+  async loadImages(page = 1, append = false) {
     if (!this.authToken) return;
 
-    this.isLoading = true;
-    this.renderMainContent();
+    if (!append) {
+      this.isLoading = true;
+      this.currentPage = 1;
+      this.hasMoreImages = true;
+      this.renderMainContent();
+    } else {
+      this.isLoadingMore = true;
+    }
 
     try {
       let query = this.searchQuery;
@@ -259,9 +352,9 @@ class ImageApp {
 
       let url = '';
       if (query) {
-        url = `https://api.unsplash.com/search/photos?query=${encodeURIComponent(query)}&per_page=30&client_id=${UNSPLASH_API_KEY}`;
+        url = `https://api.unsplash.com/search/photos?query=${encodeURIComponent(query)}&page=${page}&per_page=30&client_id=${UNSPLASH_API_KEY}`;
       } else {
-        url = `https://api.unsplash.com/photos?per_page=30&order_by=popular&client_id=${UNSPLASH_API_KEY}`;
+        url = `https://api.unsplash.com/photos?page=${page}&per_page=30&order_by=popular&client_id=${UNSPLASH_API_KEY}`;
       }
 
       const res = await fetch(url);
@@ -270,39 +363,120 @@ class ImageApp {
         const rawPhotos = Array.isArray(data) ? data : (data.results || []);
 
         if (rawPhotos.length > 0) {
-          this.images = rawPhotos.map(photo => ({
+          const mappedPhotos = rawPhotos.map(photo => ({
             id: photo.id,
-            title: photo.alt_description || photo.description || `${photo.user.name}'s Photo`,
+            title: photo.alt_description || photo.description || `${photo.user?.name || 'Unsplash'}'s Photo`,
             category: query || 'Unsplash',
-            url: photo.urls.full || photo.urls.regular,
-            thumbUrl: photo.urls.small || photo.urls.thumb,
+            url: photo.urls?.full || photo.urls?.regular,
+            thumbUrl: photo.urls?.small || photo.urls?.thumb,
             photographer: {
-              name: photo.user.name,
-              handle: `@${photo.user.username}`,
-              avatar: photo.user.profile_image.medium || photo.user.profile_image.small
+              name: photo.user?.name || 'Photographer',
+              handle: `@${photo.user?.username || 'photographer'}`,
+              avatar: photo.user?.profile_image?.medium || photo.user?.profile_image?.small || 'https://images.unsplash.com/placeholder-avatars/extra-large.jpg'
             },
             tags: photo.tags ? photo.tags.map(t => t.title) : ['unsplash', 'photography', 'art'],
             likesCount: photo.likes || 120,
             viewsCount: (photo.likes || 100) * 14,
             downloadsCount: (photo.likes || 50) * 4,
-            resolution: `${photo.width} × ${photo.height}`,
+            resolution: `${photo.width || 4000} × ${photo.height || 3000}`,
             colorPalette: [photo.color || '#F59E0B', '#111827', '#64748B', '#10B981'],
-            description: photo.description || photo.alt_description || `High resolution photo taken by ${photo.user.name} on Unsplash.`
+            description: photo.description || photo.alt_description || `High resolution photo taken by ${photo.user?.name || 'an artist'} on Unsplash.`
           }));
+
+          // Cache any photo that the user had previously liked or favorited
+          mappedPhotos.forEach(p => {
+            if (this.likes.has(p.id) || this.favourites.has(p.id)) {
+              this.savedImagesMap.set(p.id, p);
+            }
+          });
+          this.persistSavedImages();
+
+          if (append) {
+            const existingIds = new Set(this.images.map(img => img.id));
+            const uniqueNew = mappedPhotos.filter(img => !existingIds.has(img.id));
+            if (uniqueNew.length === 0) {
+              this.hasMoreImages = false;
+            } else {
+              this.images = [...this.images, ...uniqueNew];
+              this.hasMoreImages = mappedPhotos.length >= 20;
+            }
+          } else {
+            this.images = mappedPhotos;
+            this.hasMoreImages = mappedPhotos.length >= 20;
+          }
         } else {
-          this.images = [];
+          if (append) {
+            this.hasMoreImages = false;
+          } else {
+            this.images = [];
+            this.hasMoreImages = false;
+          }
         }
       } else {
         console.warn('Unsplash API notice:', res.statusText);
-        this.images = SAMPLE_IMAGES;
+        this.handleFallbackImages(page, append, query);
       }
     } catch (err) {
       console.warn('Network error fetching Unsplash API:', err.message);
-      this.images = SAMPLE_IMAGES;
+      this.handleFallbackImages(page, append);
     } finally {
       this.isLoading = false;
+      this.isLoadingMore = false;
       this.render();
     }
+  }
+
+  // Graceful fallback for offline & rate-limited environments
+  handleFallbackImages(page = 1, append = false, query = '') {
+    let pool = SAMPLE_IMAGES;
+    if (query) {
+      const q = query.toLowerCase();
+      pool = SAMPLE_IMAGES.filter(img => 
+        img.title.toLowerCase().includes(q) || 
+        img.category.toLowerCase().includes(q) || 
+        img.tags.some(t => t.toLowerCase().includes(q))
+      );
+      if (pool.length === 0) pool = SAMPLE_IMAGES;
+    } else if (this.selectedCategory !== 'All') {
+      const cat = this.selectedCategory.toLowerCase();
+      pool = SAMPLE_IMAGES.filter(img => img.category.toLowerCase() === cat);
+      if (pool.length === 0) pool = SAMPLE_IMAGES;
+    }
+
+    const pageSize = 12;
+    const startIndex = (page - 1) * pageSize;
+    const pagedItems = pool.slice(startIndex, startIndex + pageSize);
+
+    if (append) {
+      if (pagedItems.length === 0) {
+        this.hasMoreImages = false;
+      } else {
+        const existingIds = new Set(this.images.map(img => img.id));
+        const unique = pagedItems.filter(img => !existingIds.has(img.id));
+        this.images = [...this.images, ...unique];
+        if (startIndex + pageSize >= pool.length) {
+          this.hasMoreImages = false;
+        }
+      }
+    } else {
+      this.images = pagedItems.length > 0 ? pagedItems : pool;
+      this.hasMoreImages = pool.length > pageSize;
+    }
+  }
+
+  // Load next batch of images on demand
+  async loadMoreImages() {
+    if (this.isLoadingMore || !this.hasMoreImages) return;
+    this.isLoadingMore = true;
+
+    const btn = document.getElementById('loadMoreBtn');
+    if (btn) {
+      btn.disabled = true;
+      btn.innerHTML = `<span class="load-more-spinner"></span> Loading More Photos...`;
+    }
+
+    this.currentPage += 1;
+    await this.loadImages(this.currentPage, true);
   }
 
   // MongoDB User Data Sync
@@ -359,13 +533,22 @@ class ImageApp {
       return;
     }
 
+    const img = this.findImageById(id);
+
     if (this.likes.has(id)) {
       this.likes.delete(id);
       this.showToast('Removed from Likes');
     } else {
       this.likes.add(id);
       this.showToast('Added to Likes ❤️');
+      if (img) this.savedImagesMap.set(id, img);
     }
+
+    if (!this.likes.has(id) && !this.favourites.has(id)) {
+      this.savedImagesMap.delete(id);
+    }
+    this.persistSavedImages();
+
     localStorage.setItem('img_likes', JSON.stringify(Array.from(this.likes)));
     this.syncUserDataToMongoDB();
     this.renderSidebar();
@@ -380,13 +563,22 @@ class ImageApp {
       return;
     }
 
+    const img = this.findImageById(id);
+
     if (this.favourites.has(id)) {
       this.favourites.delete(id);
       this.showToast('Removed from Favourites');
     } else {
       this.favourites.add(id);
       this.showToast('Saved to Favourites ⭐');
+      if (img) this.savedImagesMap.set(id, img);
     }
+
+    if (!this.likes.has(id) && !this.favourites.has(id)) {
+      this.savedImagesMap.delete(id);
+    }
+    this.persistSavedImages();
+
     localStorage.setItem('img_favs', JSON.stringify(Array.from(this.favourites)));
     this.syncUserDataToMongoDB();
     this.renderSidebar();
@@ -432,7 +624,10 @@ class ImageApp {
 
     this.showToast('Signed in as Guest Demo Explorer! (Register account to download photos)');
     this.currentView = 'grid';
-    this.loadImages();
+    this.activeFilter = 'all';
+    this.currentPage = 1;
+    this.hasMoreImages = true;
+    this.loadImages(1, false);
   }
 
   // DOWNLOAD PHOTO ONLY PERMITTED FOR REGISTERED USERS!
@@ -445,7 +640,7 @@ class ImageApp {
       return;
     }
 
-    const img = this.images.find(i => i.id === id);
+    const img = this.findImageById(id);
     if (!img) return;
     
     const a = document.createElement('a');
@@ -468,15 +663,42 @@ class ImageApp {
   }
 
   getFilteredImages() {
-    return this.images.filter(img => {
-      if (this.activeFilter === 'likes' && !this.likes.has(img.id)) {
-        return false;
+    const allSaved = Array.from(this.savedImagesMap.values());
+
+    if (this.activeFilter === 'likes') {
+      const map = new Map();
+      allSaved.filter(img => this.likes.has(img.id)).forEach(img => map.set(img.id, img));
+      this.images.filter(img => this.likes.has(img.id)).forEach(img => map.set(img.id, img));
+      return Array.from(map.values());
+    }
+
+    if (this.activeFilter === 'favourite') {
+      const map = new Map();
+      allSaved.filter(img => this.favourites.has(img.id)).forEach(img => map.set(img.id, img));
+      this.images.filter(img => this.favourites.has(img.id)).forEach(img => map.set(img.id, img));
+      return Array.from(map.values());
+    }
+
+    if (this.activeFilter === 'all-saved') {
+      const map = new Map();
+      allSaved.filter(img => this.likes.has(img.id) || this.favourites.has(img.id)).forEach(img => map.set(img.id, img));
+      this.images.filter(img => this.likes.has(img.id) || this.favourites.has(img.id)).forEach(img => map.set(img.id, img));
+      return Array.from(map.values());
+    }
+
+    // Default 'all' filter:
+    // Display all loaded images, plus guarantee any saved images matching the category or all are visible
+    const map = new Map();
+    this.images.forEach(img => map.set(img.id, img));
+    allSaved.forEach(img => {
+      if (this.selectedCategory === 'All' || img.category.toLowerCase() === this.selectedCategory.toLowerCase()) {
+        if (!map.has(img.id)) {
+          map.set(img.id, img);
+        }
       }
-      if (this.activeFilter === 'favourite' && !this.favourites.has(img.id)) {
-        return false;
-      }
-      return true;
     });
+
+    return Array.from(map.values());
   }
 
   renderCategories() {
@@ -490,6 +712,9 @@ class ImageApp {
     this.categoriesBar.querySelectorAll('.category-chip').forEach(chip => {
       chip.addEventListener('click', () => {
         this.selectedCategory = chip.dataset.cat;
+        this.activeFilter = 'all'; // Reset to All images so chosen category is immediately visible!
+        this.currentPage = 1;
+        this.hasMoreImages = true;
         if (!this.authToken) {
           this.showToast('Please log in first');
           this.currentView = 'login';
@@ -497,15 +722,18 @@ class ImageApp {
           return;
         }
         if (this.currentView !== 'detail') this.currentView = 'grid';
-        this.loadImages();
+        this.loadImages(1, false);
       });
     });
   }
 
   /* RENDER SIDEBAR */
   renderSidebar() {
+    const isAllActive = this.activeFilter === 'all' && this.currentView === 'grid';
+    const isSavedActive = this.activeFilter === 'all-saved';
     const isLikesActive = this.activeFilter === 'likes';
     const isFavActive = this.activeFilter === 'favourite';
+    const totalSaved = new Set([...this.likes, ...this.favourites]).size;
     const isLoggedIn = !!this.authToken;
 
     let html = '';
@@ -528,11 +756,21 @@ class ImageApp {
     }
 
     html += `
+      <button class="sidebar-pill-btn ${isAllActive ? 'active' : ''}" data-action="all">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><rect x="3" y="3" width="7" height="7"></rect><rect x="14" y="3" width="7" height="7"></rect><rect x="14" y="14" width="7" height="7"></rect><rect x="3" y="14" width="7" height="7"></rect></svg>
+        All Images
+      </button>
+      <button class="sidebar-pill-btn ${isSavedActive ? 'active' : ''}" data-action="all-saved">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon></svg>
+        All Saved ${totalSaved > 0 ? `<span class="badge" style="background:#8b5cf6;">${totalSaved}</span>` : ''}
+      </button>
       <button class="sidebar-pill-btn ${isLikesActive ? 'active' : ''}" data-action="likes">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="${isLikesActive ? 'currentColor' : 'none'}" stroke="currentColor" stroke-width="2"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path></svg>
         Likes ${this.likes.size > 0 ? `<span class="badge">${this.likes.size}</span>` : ''}
       </button>
       <button class="sidebar-pill-btn ${isFavActive ? 'active' : ''}" data-action="favourite">
-        Favourite ${this.favourites.size > 0 ? `<span class="badge">${this.favourites.size}</span>` : ''}
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="${isFavActive ? 'currentColor' : 'none'}" stroke="currentColor" stroke-width="2"><path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"></path></svg>
+        Favourite ${this.favourites.size > 0 ? `<span class="badge" style="background:#f59e0b;">${this.favourites.size}</span>` : ''}
       </button>
     `;
 
@@ -583,13 +821,20 @@ class ImageApp {
   /* RENDER GRID VIEW */
   renderGridView() {
     const filtered = this.getFilteredImages();
+    const totalSaved = new Set([...this.likes, ...this.favourites]).size;
 
     if (filtered.length === 0) {
       this.mainCanvas.innerHTML = `
         <div class="empty-state">
           <h3>No Images Found</h3>
-          <p>No results match your search "${this.searchQuery}" or selected filter.</p>
-          <button class="sidebar-pill-btn" style="max-width: 180px; margin: 0 auto;" id="resetFilterBtn">Reset Filters</button>
+          <p>${this.activeFilter === 'likes' 
+              ? "You haven't liked any images yet. Click the ❤️ icon on any photo to like it!" 
+              : this.activeFilter === 'favourite' 
+              ? "You haven't added any favourites yet. Click the ⭐ icon on any photo to favourite it!" 
+              : this.activeFilter === 'all-saved' 
+              ? "No saved images in your collection yet. Like or favourite images to see them here!" 
+              : `No results match your search "${this.searchQuery}" or selected category.`}</p>
+          <button class="sidebar-pill-btn" style="max-width: 200px; margin: 16px auto 0;" id="resetFilterBtn">View All Images</button>
         </div>
       `;
       document.getElementById('resetFilterBtn')?.addEventListener('click', () => {
@@ -598,7 +843,8 @@ class ImageApp {
         this.activeFilter = 'all';
         this.searchInput.value = '';
         this.searchClearBtn.style.display = 'none';
-        this.loadImages();
+        this.currentPage = 1;
+        this.loadImages(1, false);
       });
       return;
     }
@@ -607,8 +853,19 @@ class ImageApp {
       const isLiked = this.likes.has(img.id);
       const isFav = this.favourites.has(img.id);
 
+      let badgesHtml = '';
+      if (isLiked || isFav) {
+        badgesHtml = `
+          <div class="card-badges-container">
+            ${isLiked ? '<span class="status-badge status-badge-like">❤️ Liked</span>' : ''}
+            ${isFav ? '<span class="status-badge status-badge-fav">⭐ Favorite</span>' : ''}
+          </div>
+        `;
+      }
+
       return `
         <div class="image-card" data-id="${img.id}" title="${img.title}">
+          ${badgesHtml}
           <img class="image-card-img" src="${img.thumbUrl}" alt="${img.title}" loading="lazy" />
           
           <div class="image-card-overlay">
@@ -633,20 +890,79 @@ class ImageApp {
       `;
     }).join('');
 
+    // Summary ribbon when viewing All and user has saved collections
+    let ribbonHtml = '';
+    if (this.activeFilter === 'all' && totalSaved > 0) {
+      ribbonHtml = `
+        <div class="saved-summary-ribbon">
+          <div class="saved-summary-left">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#f59e0b" stroke-width="2"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
+            <span>Your Collection: <strong>${this.likes.size} Liked</strong> and <strong>${this.favourites.size} Favorited</strong> photos are highlighted in this gallery!</span>
+          </div>
+          <button class="saved-summary-btn">View All Saved (${totalSaved})</button>
+        </div>
+      `;
+    }
+
+    // Load more button section
+    let loadMoreHtml = '';
+    if (this.activeFilter === 'all') {
+      if (this.hasMoreImages) {
+        loadMoreHtml = `
+          <div class="load-more-section">
+            <button class="load-more-btn" id="loadMoreBtn" ${this.isLoadingMore ? 'disabled' : ''}>
+              ${this.isLoadingMore 
+                ? '<span class="load-more-spinner"></span> Loading More Photos...' 
+                : `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg> Load More Images`}
+            </button>
+            <span class="load-more-info">Page ${this.currentPage} • Showing ${filtered.length} photos</span>
+          </div>
+        `;
+      } else {
+        loadMoreHtml = `
+          <div class="load-more-section">
+            <div class="load-more-info">🎉 You've reached the end of the collection (${filtered.length} photos displayed)</div>
+          </div>
+        `;
+      }
+    }
+
     this.mainCanvas.innerHTML = `
-      <div class="api-badge">
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline></svg>
-        Powered by Unsplash API Live Feed
+      <div class="gallery-header-toolbar">
+        <div class="gallery-filters-group">
+          <button class="gallery-filter-btn ${this.activeFilter === 'all' ? 'active' : ''}" data-filter="all">
+            🖼️ All Images (${this.images.length})
+          </button>
+          <button class="gallery-filter-btn ${this.activeFilter === 'all-saved' ? 'active' : ''}" data-filter="all-saved">
+            ✨ All Saved (${totalSaved})
+          </button>
+          <button class="gallery-filter-btn ${this.activeFilter === 'likes' ? 'active' : ''}" data-filter="likes">
+            ❤️ Likes (${this.likes.size})
+          </button>
+          <button class="gallery-filter-btn ${this.activeFilter === 'favourite' ? 'active' : ''}" data-filter="favourite">
+            ⭐ Favourites (${this.favourites.size})
+          </button>
+        </div>
+
+        <div class="gallery-stats-info">
+          <span>Category: <strong style="color:var(--accent-gold);">${this.selectedCategory}</strong></span>
+          <span>Showing <strong class="gallery-stats-count">${filtered.length}</strong> photo${filtered.length === 1 ? '' : 's'}</span>
+        </div>
       </div>
+
+      ${ribbonHtml}
+
       <div class="image-grid-container">
         ${cardsHtml}
       </div>
+
+      ${loadMoreHtml}
     `;
   }
 
   /* RENDER SINGLE DETAIL VIEW (DOWNLOAD OPTION EXCLUSIVELY FOR REGISTERED USERS) */
   renderSingleDetailView() {
-    const img = this.images.find(i => i.id === this.selectedImageId);
+    const img = this.findImageById(this.selectedImageId);
     if (!img) return;
 
     const isLiked = this.likes.has(img.id);
@@ -818,7 +1134,10 @@ class ImageApp {
 
           this.showToast(`Welcome back ${data.user.username}! Download access unlocked.`);
           this.currentView = 'grid';
-          this.loadImages();
+          this.activeFilter = 'all';
+          this.currentPage = 1;
+          this.hasMoreImages = true;
+          this.loadImages(1, false);
         } else {
           const errorMsg = data?.error || data?.message || `Login failed (HTTP ${res.status}).`;
           errorBanner.innerHTML = `<div>${errorMsg}</div>`;
@@ -923,7 +1242,10 @@ class ImageApp {
           
           this.showToast(`Welcome ${data.user.username}! Registration successful & downloads unlocked.`);
           this.currentView = 'grid';
-          this.loadImages();
+          this.activeFilter = 'all';
+          this.currentPage = 1;
+          this.hasMoreImages = true;
+          this.loadImages(1, false);
         } else {
           const errorMsg = data?.error || data?.message || `Registration failed (HTTP ${res.status}).`;
           errorBanner.innerHTML = `<div>${errorMsg}</div>`;

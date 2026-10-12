@@ -283,5 +283,291 @@ export const SAMPLE_IMAGES = [
     resolution: "4000 × 4000",
     colorPalette: ["#F8FAFC", "#E2E8F0", "#94A3B8", "#475569", "#0F172A"],
     description: "Hypnotic top-down view of a perfectly symmetrical white marble spiral staircase."
+  },
+  {
+    id: "img-16",
+    title: "Alpine Mist & Turquoise Lake",
+    category: "Nature",
+    url: "https://images.unsplash.com/photo-1470071459604-3b5ec3a7fe05?auto=format&fit=crop&w=1400&q=80",
+    thumbUrl: "https://images.unsplash.com/photo-1470071459604-3b5ec3a7fe05?auto=format&fit=crop&w=600&q=80",
+    photographer: {
+      name: "Julian Rad",
+      handle: "@julian_alps",
+      avatar: "https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=150&q=80"
+    },
+    tags: ["alps", "lake", "fog", "mountains", "turquoise", "reflection", "nature"],
+    likesCount: 3820,
+    viewsCount: 92400,
+    downloadsCount: 14100,
+    resolution: "5472 × 3648",
+    colorPalette: ["#0284C7", "#0D9488", "#1E293B", "#F1F5F9", "#047857"],
+    description: "Pristine glacial lake reflecting jagged mountain peaks cloaked in ethereal morning fog."
+  },
+  {
+    id: "img-17",
+    title: "Cybernetic Neural Network",
+    category: "Technology",
+    url: "https://images.unsplash.com/photo-1507413245164-6160d8298b31?auto=format&fit=crop&w=1400&q=80",
+    thumbUrl: "https://images.unsplash.com/photo-1507413245164-6160d8298b31?auto=format&fit=crop&w=600&q=80",
+    photographer: {
+      name: "Tanya Miller",
+      handle: "@tanya_quantum",
+      avatar: "https://images.unsplash.com/photo-1544005313-94ddf0286df2?auto=format&fit=crop&w=150&q=80"
+    },
+    tags: ["ai", "neural", "network", "nodes", "cyber", "technology", "abstract"],
+    likesCount: 2940,
+    viewsCount: 71800,
+    downloadsCount: 10500,
+    resolution: "6000 × 4000",
+    colorPalette: ["#8B5CF6", "#6366F1", "#EC4899", "#111827", "#3B82F6"],
+    description: "Intricate glowing synaptic nodes firing data packets across an interconnected neural mesh."
+  },
+  {
+    id: "img-18",
+    title: "Tropical Turquoise Coral Atoll",
+    category: "Travel",
+    url: "https://images.unsplash.com/photo-1507525428034-b723cf961d3e?auto=format&fit=crop&w=1400&q=80",
+    thumbUrl: "https://images.unsplash.com/photo-1507525428034-b723cf961d3e?auto=format&fit=crop&w=600&q=80",
+    photographer: {
+      name: "Sean Oulashin",
+      handle: "@sean_ocean",
+      avatar: "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?auto=format&fit=crop&w=150&q=80"
+    },
+    tags: ["beach", "tropical", "island", "sea", "sand", "summer", "travel", "ocean"],
+    likesCount: 4720,
+    viewsCount: 118000,
+    downloadsCount: 19800,
+    resolution: "5184 × 3456",
+    colorPalette: ["#06B6D4", "#0284C7", "#FEF08A", "#F8FAFC", "#0E7490"],
+    description: "Aerial perspective of an untouched white sand beach meeting crystalline turquoise ocean waves."
+  },
+  {
+    id: "img-19",
+    title: "Monochrome Architectural Curves",
+    category: "Architecture",
+    url: "https://images.unsplash.com/photo-1513694203232-719a280e022f?auto=format&fit=crop&w=1400&q=80",
+    thumbUrl: "https://images.unsplash.com/photo-1513694203232-719a280e022f?auto=format&fit=crop&w=600&q=80",
+    photographer: {
+      name: "Helena Rostam",
+      handle: "@helena_lines",
+      avatar: "https://images.unsplash.com/photo-1517841905240-472988babdf9?auto=format&fit=crop&w=150&q=80"
+    },
+    tags: ["architecture", "curves", "black and white", "modern", "design", "museum"],
+    likesCount: 1950,
+    viewsCount: 45200,
+    downloadsCount: 6800,
+    resolution: "4800 × 3200",
+    colorPalette: ["#18181B", "#27272A", "#71717A", "#E4E4E7", "#FFFFFF"],
+    description: "Flowing organic contours of ultra-modern architectural sculpture sculpted in smooth cast concrete."
+  },
+  {
+    id: "img-20",
+    title: "Luminous Prism Waves",
+    category: "Abstract",
+    url: "https://images.unsplash.com/photo-1550684848-fac1c5b4e853?auto=format&fit=crop&w=1400&q=80",
+    thumbUrl: "https://images.unsplash.com/photo-1550684848-fac1c5b4e853?auto=format&fit=crop&w=600&q=80",
+    photographer: {
+      name: "Alain K.",
+      handle: "@alain_prism",
+      avatar: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=150&q=80"
+    },
+    tags: ["prism", "abstract", "rainbow", "light", "waves", "glass", "vibrant"],
+    likesCount: 3380,
+    viewsCount: 81200,
+    downloadsCount: 13400,
+    resolution: "5000 × 3333",
+    colorPalette: ["#F43F5E", "#F59E0B", "#10B981", "#3B82F6", "#8B5CF6"],
+    description: "Refracted iridescent beam of light dispersing into vivid spectra through polished crystal prism."
+  },
+  {
+    id: "img-21",
+    title: "Red Fox in Autumn Leaves",
+    category: "Animals",
+    url: "https://images.unsplash.com/photo-1516934024742-b461fba47600?auto=format&fit=crop&w=1400&q=80",
+    thumbUrl: "https://images.unsplash.com/photo-1516934024742-b461fba47600?auto=format&fit=crop&w=600&q=80",
+    photographer: {
+      name: "Ray Hennessy",
+      handle: "@rayhennessy",
+      avatar: "https://images.unsplash.com/photo-1522075469751-3a6694fb2f61?auto=format&fit=crop&w=150&q=80"
+    },
+    tags: ["fox", "wildlife", "animal", "autumn", "nature", "forest", "orange"],
+    likesCount: 5120,
+    viewsCount: 124000,
+    downloadsCount: 21500,
+    resolution: "4200 × 2800",
+    colorPalette: ["#EA580C", "#C2410C", "#7C2D12", "#FED7AA", "#1C1917"],
+    description: "Curious red fox peering through vibrant golden autumn leaves in a tranquil deciduous forest."
+  },
+  {
+    id: "img-22",
+    title: "Tokyo Shinjuku Night Rain",
+    category: "Architecture",
+    url: "https://images.unsplash.com/photo-1503899036084-c55cdd92da26?auto=format&fit=crop&w=1400&q=80",
+    thumbUrl: "https://images.unsplash.com/photo-1503899036084-c55cdd92da26?auto=format&fit=crop&w=600&q=80",
+    photographer: {
+      name: "Masashi Wakui",
+      handle: "@masashi_tokyo",
+      avatar: "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&w=150&q=80"
+    },
+    tags: ["tokyo", "japan", "neon", "rain", "night", "city", "street", "architecture"],
+    likesCount: 4610,
+    viewsCount: 110000,
+    downloadsCount: 18900,
+    resolution: "5400 × 3600",
+    colorPalette: ["#E11D48", "#4F46E5", "#06B6D4", "#0F172A", "#FBBF24"],
+    description: "Atmospheric street corner in Shinjuku bathed in glowing neon lanterns during evening drizzle."
+  },
+  {
+    id: "img-23",
+    title: "Fresh Berry Acai Bowl",
+    category: "Food",
+    url: "https://images.unsplash.com/photo-1590301157890-4810ed352733?auto=format&fit=crop&w=1400&q=80",
+    thumbUrl: "https://images.unsplash.com/photo-1590301157890-4810ed352733?auto=format&fit=crop&w=600&q=80",
+    photographer: {
+      name: "Ella Olsson",
+      handle: "@ellaolsson",
+      avatar: "https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=150&q=80"
+    },
+    tags: ["acai", "berries", "smoothie", "breakfast", "healthy", "food", "vegan", "fruit"],
+    likesCount: 1820,
+    viewsCount: 41200,
+    downloadsCount: 5600,
+    resolution: "4000 × 2667",
+    colorPalette: ["#701A75", "#A21CAF", "#E11D48", "#FDE047", "#1E1B4B"],
+    description: "Vibrant organic acai smoothie bowl decorated with fresh blueberries, strawberries, chia seeds and coconut flakes."
+  },
+  {
+    id: "img-24",
+    title: "Cosmic Nebula Deep Space",
+    category: "Abstract",
+    url: "https://images.unsplash.com/photo-1462331940025-496dfbfc7564?auto=format&fit=crop&w=1400&q=80",
+    thumbUrl: "https://images.unsplash.com/photo-1462331940025-496dfbfc7564?auto=format&fit=crop&w=600&q=80",
+    photographer: {
+      name: "NASA Hubble",
+      handle: "@nasa",
+      avatar: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=150&q=80"
+    },
+    tags: ["space", "nebula", "stars", "galaxy", "cosmic", "universe", "astronomy"],
+    likesCount: 6890,
+    viewsCount: 168000,
+    downloadsCount: 32000,
+    resolution: "6000 × 4000",
+    colorPalette: ["#312E81", "#6D28D9", "#BE185D", "#F472B6", "#020617"],
+    description: "Stunning stellar nurseries in deep space where millions of new stars ignite amidst swirling interstellar gas."
+  },
+  {
+    id: "img-25",
+    title: "Geometric Modern Bauhaus Living",
+    category: "Minimalist",
+    url: "https://images.unsplash.com/photo-1493663284031-b7e3aefcae8e?auto=format&fit=crop&w=1400&q=80",
+    thumbUrl: "https://images.unsplash.com/photo-1493663284031-b7e3aefcae8e?auto=format&fit=crop&w=600&q=80",
+    photographer: {
+      name: "Bram Van Roy",
+      handle: "@bramvanroy",
+      avatar: "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?auto=format&fit=crop&w=150&q=80"
+    },
+    tags: ["interior", "minimal", "furniture", "living room", "couch", "scandinavian", "design"],
+    likesCount: 2210,
+    viewsCount: 52900,
+    downloadsCount: 8400,
+    resolution: "4800 × 3200",
+    colorPalette: ["#E2E8F0", "#94A3B8", "#D97706", "#334155", "#0F172A"],
+    description: "Sunlit Scandinavian living room featuring clean lines, warm oak wood accents, and plush neutral furnishings."
+  },
+  {
+    id: "img-26",
+    title: "Lavender Fields Sunset Provence",
+    category: "Travel",
+    url: "https://images.unsplash.com/photo-1500382017468-9049fed747ef?auto=format&fit=crop&w=1400&q=80",
+    thumbUrl: "https://images.unsplash.com/photo-1500382017468-9049fed747ef?auto=format&fit=crop&w=600&q=80",
+    photographer: {
+      name: "Federico Respini",
+      handle: "@federico_nature",
+      avatar: "https://images.unsplash.com/photo-1522075469751-3a6694fb2f61?auto=format&fit=crop&w=150&q=80"
+    },
+    tags: ["lavender", "france", "provence", "sunset", "field", "purple", "travel", "summer"],
+    likesCount: 3740,
+    viewsCount: 88700,
+    downloadsCount: 14600,
+    resolution: "5184 × 3456",
+    colorPalette: ["#7E22CE", "#A855F7", "#F59E0B", "#FDE68A", "#1E1B4B"],
+    description: "Endless rows of blooming fragrant purple lavender fields stretching toward a golden French sunset horizon."
+  },
+  {
+    id: "img-27",
+    title: "High-Speed Quantum Data Center",
+    category: "Technology",
+    url: "https://images.unsplash.com/photo-1558494949-ef010cbdcc31?auto=format&fit=crop&w=1400&q=80",
+    thumbUrl: "https://images.unsplash.com/photo-1558494949-ef010cbdcc31?auto=format&fit=crop&w=600&q=80",
+    photographer: {
+      name: "Christina Morillo",
+      handle: "@divinetech",
+      avatar: "https://images.unsplash.com/photo-1544005313-94ddf0286df2?auto=format&fit=crop&w=150&q=80"
+    },
+    tags: ["server", "datacenter", "cloud", "technology", "network", "hardware", "blue"],
+    likesCount: 2430,
+    viewsCount: 58300,
+    downloadsCount: 9100,
+    resolution: "5000 × 3333",
+    colorPalette: ["#0284C7", "#0369A1", "#082F49", "#38BDF8", "#F0F9FF"],
+    description: "Illuminated server racks and fiber optic cable harnesses humming with processing power in modern cloud facility."
+  },
+  {
+    id: "img-28",
+    title: "Playful Sea Otter Floating",
+    category: "Animals",
+    url: "https://images.unsplash.com/photo-1518020382113-a7e8fc38eac9?auto=format&fit=crop&w=1400&q=80",
+    thumbUrl: "https://images.unsplash.com/photo-1518020382113-a7e8fc38eac9?auto=format&fit=crop&w=600&q=80",
+    photographer: {
+      name: "Kirsten Frank",
+      handle: "@kirsten_wild",
+      avatar: "https://images.unsplash.com/photo-1517841905240-472988babdf9?auto=format&fit=crop&w=150&q=80"
+    },
+    tags: ["otter", "animal", "ocean", "wildlife", "cute", "water", "marine"],
+    likesCount: 4890,
+    viewsCount: 115000,
+    downloadsCount: 19200,
+    resolution: "4200 × 2800",
+    colorPalette: ["#0369A1", "#0284C7", "#78350F", "#B45309", "#E0F2FE"],
+    description: "Charming sea otter floating serenely on its back amid coastal kelp forests in Monterey Bay."
+  },
+  {
+    id: "img-29",
+    title: "Abstract Liquid Marble Pigments",
+    category: "Art",
+    url: "https://images.unsplash.com/photo-1579783900882-c0d3dad7b119?auto=format&fit=crop&w=1400&q=80",
+    thumbUrl: "https://images.unsplash.com/photo-1579783900882-c0d3dad7b119?auto=format&fit=crop&w=600&q=80",
+    photographer: {
+      name: "Polina Kovaleva",
+      handle: "@polina_art",
+      avatar: "https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=150&q=80"
+    },
+    tags: ["marble", "liquid", "acrylic", "art", "gold", "emerald", "luxury", "swirl"],
+    likesCount: 3950,
+    viewsCount: 95400,
+    downloadsCount: 16700,
+    resolution: "6000 × 4000",
+    colorPalette: ["#047857", "#059669", "#D97706", "#FBBF24", "#0F172A"],
+    description: "Opulent emerald green and liquid gold acrylic pigments swirling organically across dark marble surface."
+  },
+  {
+    id: "img-30",
+    title: "Misty Redwoods Primeval Forest",
+    category: "Nature",
+    url: "https://images.unsplash.com/photo-1448375240586-882707db888b?auto=format&fit=crop&w=1400&q=80",
+    thumbUrl: "https://images.unsplash.com/photo-1448375240586-882707db888b?auto=format&fit=crop&w=600&q=80",
+    photographer: {
+      name: "Dan Meyers",
+      handle: "@danmeyers",
+      avatar: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=150&q=80"
+    },
+    tags: ["forest", "redwoods", "trees", "mist", "sunbeams", "nature", "green", "quiet"],
+    likesCount: 3410,
+    viewsCount: 82000,
+    downloadsCount: 13500,
+    resolution: "5184 × 3456",
+    colorPalette: ["#14532D", "#15803D", "#4ADE80", "#FEF08A", "#052E16"],
+    description: "Sun rays piercing through misty canopy of ancient redwood giants in Northern California."
   }
 ];
+
